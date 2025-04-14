@@ -53,6 +53,49 @@ int main(void) {
     video_in_dma = (unsigned int *)(virtual_base + VIDEO_BASE);
     video_mem = (volatile unsigned short *)(virtual_base2 + (FPGA_ONCHIP_BASE & IMAGE_MASK));
 
+    // Access the video input DMA register
+    int value = (videvideo_mem+ 3);
+    printf "Video In DMA register updated at: 0x%x\n", (unsigned int)video_in_dma);
+    
+    // Modify the PIO register
+    *(video_in_dma + 3) = 0x4;
+    printf ("DB1 \n");
+   
+    // Capture image
+    for (int y = 0; y < IMAGE_HEIGHT; y++) (
+        for (int x = 0; x < IMAGE_ WIDTH; x+) (
+            int index = (y * IMAGE_WIDTH) + x;
+            pixels[index] = video_mem[(y<<9)+x]; // Uncommented this line
+        }
+    }
+
+    printf("DB2 \n");
+    
+    // save image
+    const char* filename = "final_image_color.bmp";
+    saveImageShort(filename, pixels, IMAGE_WIDTH, IMAGE_HEIGHT);
+    
+    // Cleanup - uncommented and fixed
+    if (munmap(virtual_base2, IMAGE_SPAN) ! = 0) (
+        printf ("ERROR: munmap() for FPGA memory failed... In*");
+        //munmap(virtual_base, HW_REGS_SPAN);
+        close(fd);
+        return 1; 
+
+    if (munmap(virtual_base, Hi_REGS_SPAN) != 0) {
+        printf("ERROR: munmap() for HW registers failed... \n*");
+        close(fd);
+        return 1;
+    }
+        close(fd);
+        return 0;
+}
+
+
+
+
+
+
     // Add button handling (ADDED)
     key_ptr = (volatile unsigned int *)(virtual_base + PUSH_BASE);
     int prev_key_state = 0;
