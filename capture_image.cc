@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include "bmp_utility.h"
 
-// Keep original defines
 #define HW_REGS_BASE (0xff200000)
 #define HW_REGS_SPAN (0x00200000)
 #define HW_REGS_MASK (HW_REGS_SPAN - 1)
@@ -17,27 +16,24 @@
 #define IMAGE_HEIGHT 240
 
 #define FPGA_ONCHIP_BASE (0xC8000000)
-#define IMAGE_SPAN (IMAGE_WIDTH * IMAGE_HEIGHT * 2)  // Changed to 2 bytes per pixel (16-bit)
+#define IMAGE_SPAN (IMAGE_WIDTH * IMAGE_HEIGHT * 4)
 #define IMAGE_MASK (IMAGE_SPAN - 1)
 
 int main(void) {
-    volatile unsigned int *video_in_dma = NULL;
-    volatile unsigned int *key_ptr = NULL;
-    volatile unsigned short *video_mem = NULL;
     void *virtual_base;
+    void *virtual_base2;
+    volatile unsigned int *video_in_dma = NULL;
+    volatile unsigned short *video_mem = NULL;
     int fd;
+    unsigned short pixels[IMAGE_HEIGHT * IMAGE_WIDTH];
 
-    // Pixel buffers (ADDED)
-    unsigned short pixels[IMAGE_HEIGHT][IMAGE_WIDTH];
-    unsigned char pixels_bw[IMAGE_HEIGHT][IMAGE_WIDTH];
-
-    // Keep original /dev/mem opening
+    // open /dev/mem
     if ((fd = open("/dev/mem", (O_RDWR | O_SYNC))) == -1) {
         printf("ERROR: could not open \"/dev/mem\"...\n");
         return 1;
     }
 
-    // Keep original memory mapping
+    // memory mapping
     virtual_base = mmap(NULL, HW_REGS_SPAN, (PROT_READ | PROT_WRITE), MAP_SHARED, fd, HW_REGS_BASE);
     if (virtual_base == MAP_FAILED) {
         printf("ERROR: mmap() failed...\n");
@@ -46,17 +42,16 @@ int main(void) {
     }
 
     // Map camera buffer memory (ADDED)
-    void *video_buffer_base = mmap(NULL, IMAGE_SPAN, PROT_READ | PROT_WRITE, MAP_SHARED, fd, FPGA_ONCHIP_BASE);
+    virtual_base2 = mmap(NULL, IMAGE_SPAN, PROT_READ | PROT_WRITE, MAP_SHARED, fd, FPGA_ONCHIP_BASE);
     if (video_buffer_base == MAP_FAILED) {
         printf("ERROR: camera buffer mmap() failed...\n");
         close(fd);
         return 1;
     }
-    video_mem = (volatile unsigned short *)video_buffer_base;
 
-    // Keep original video DMA setup
-    video_in_dma = (unsigned int *)(virtual_base + ((VIDEO_BASE) & (HW_REGS_MASK)));
-    *(video_in_dma+3) = 0x4;  // Enable DMA
+    // initialize pointers
+    video_in_dma = (unsigned int *)(virtual_base + VIDEO_BASE);
+    video_mem = (volatile unsigned short *)(virtual_base2 + (FPGA_ONCHIP_BASE & IMAGE_MASK));
 
     // Add button handling (ADDED)
     key_ptr = (volatile unsigned int *)(virtual_base + PUSH_BASE);
