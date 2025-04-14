@@ -26,6 +26,8 @@ int main(void) {
     volatile unsigned short *video_mem = NULL;
     int fd;
     unsigned short pixels[IMAGE_HEIGHT * IMAGE_WIDTH];
+    unsigned char pixels_bw[IMAGE_HEIGHT * IMAGE_WIDTH];
+
 
     // open /dev/mem
     if ((fd = open("/dev/mem", (O_RDWR | O_SYNC))) == -1) {
