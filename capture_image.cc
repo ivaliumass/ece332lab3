@@ -68,6 +68,7 @@ int main(void) {
         for (int x = 0; x < IMAGE_ WIDTH; x+) (
             int index = (y * IMAGE_WIDTH) + x;
             pixels[index] = video_mem[(y<<9)+x]; // Uncommented this line
+            pixels_bw[index] = video_mem[(y<<9) +x];
         }
     }
 
@@ -76,7 +77,8 @@ int main(void) {
     // save image
     const char* filename = "final_image_color.bmp";
     saveImageShort(filename, pixels, IMAGE_WIDTH, IMAGE_HEIGHT);
-    
+    saveImageGrayscale(filename1, pixels_bw, IMAGE_WIDTH, IMAGE_HEIGHT);
+
     // Cleanup - uncommented and fixed
     if (munmap(virtual_base2, IMAGE_SPAN) ! = 0) (
         printf ("ERROR: munmap() for FPGA memory failed... In*");
